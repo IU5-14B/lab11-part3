@@ -31,7 +31,6 @@ std::vector<double> solveGaussian(Matrix A, std::vector<double> b) {
 
     // Прямой ход с частичным выбором главного элемента
     for (int col = 0; col < n; ++col) {
-        // 1) Найти строку с максимальным |A[row][col]|
         int pivot = col;
         double maxAbs = std::fabs(A.at(col, col));
         for (int row = col + 1; row < n; ++row) {
@@ -43,11 +42,10 @@ std::vector<double> solveGaussian(Matrix A, std::vector<double> b) {
         }
 
         if (maxAbs < EPS) {
-            std::cerr << "Gaussian: matrix is singular or near singular.\n";
+            std::cerr << "Метод Гаусса: матрица вырождена или близка к вырожденной.\n";
             return {};
         }
 
-        // 2) Поменять строки местами, если нужно
         if (pivot != col) {
             for (int j = 0; j < n; ++j) {
                 std::swap(A.at(col, j), A.at(pivot, j));
@@ -55,10 +53,9 @@ std::vector<double> solveGaussian(Matrix A, std::vector<double> b) {
             std::swap(b[col], b[pivot]);
         }
 
-        // 3) Обнулить элементы ниже ведущего
         for (int row = col + 1; row < n; ++row) {
             double factor = A.at(row, col) / A.at(col, col);
-            A.at(row, col) = 0.0; // станет нулём
+            A.at(row, col) = 0.0;
 
             for (int j = col + 1; j < n; ++j) {
                 A.at(row, j) -= factor * A.at(col, j);
@@ -85,13 +82,11 @@ bool luDecompose(const Matrix& A, Matrix& L, Matrix& U) {
     L = Matrix(n, n, 0.0);
     U = Matrix(n, n, 0.0);
 
-    // Doolittle: диагональ L = 1
     for (int i = 0; i < n; ++i) {
         L.at(i, i) = 1.0;
     }
 
     for (int i = 0; i < n; ++i) {
-        // Считаем U[i][j]
         for (int j = i; j < n; ++j) {
             double sum = 0.0;
             for (int k = 0; k < i; ++k) {
@@ -100,12 +95,10 @@ bool luDecompose(const Matrix& A, Matrix& L, Matrix& U) {
             U.at(i, j) = A.at(i, j) - sum;
         }
 
-        // Проверка ведущего элемента
         if (std::fabs(U.at(i, i)) < EPS) {
             return false;
         }
 
-        // Считаем L[j][i]
         for (int j = i + 1; j < n; ++j) {
             double sum = 0.0;
             for (int k = 0; k < i; ++k) {
@@ -127,7 +120,6 @@ static std::vector<double> forwardSubstitution(const Matrix& L, const std::vecto
         for (int j = 0; j < i; ++j) {
             sum += L.at(i, j) * y[j];
         }
-        // В Doolittle L[i][i] = 1, но оставим формулу общей:
         y[i] = (b[i] - sum) / L.at(i, i);
     }
     return y;
@@ -150,7 +142,7 @@ static std::vector<double> backSubstitution(const Matrix& U, const std::vector<d
 std::vector<double> solveLU(const Matrix& A, const std::vector<double>& b) {
     Matrix L, U;
     if (!luDecompose(A, L, U)) {
-        std::cerr << "LU: decomposition failed (zero pivot).\n";
+        std::cerr << "LU-разложение: невозможно выполнить разложение (нулевой ведущий элемент).\n";
         return {};
     }
 
@@ -163,7 +155,6 @@ bool invertMatrix(const Matrix& A, Matrix& invA) {
     int n = A.rows();
     Matrix aug(n, 2 * n, 0.0);
 
-    // Собираем [A | I]
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             aug.at(i, j) = A.at(i, j);
@@ -173,9 +164,7 @@ bool invertMatrix(const Matrix& A, Matrix& invA) {
         }
     }
 
-    // Гаусс–Жордан
     for (int col = 0; col < n; ++col) {
-        // pivot
         int pivot = col;
         double maxAbs = std::fabs(aug.at(col, col));
         for (int row = col + 1; row < n; ++row) {
@@ -188,20 +177,17 @@ bool invertMatrix(const Matrix& A, Matrix& invA) {
 
         if (maxAbs < EPS) return false;
 
-        // swap rows
         if (pivot != col) {
             for (int j = 0; j < 2 * n; ++j) {
                 std::swap(aug.at(col, j), aug.at(pivot, j));
             }
         }
 
-        // normalize pivot row
         double div = aug.at(col, col);
         for (int j = 0; j < 2 * n; ++j) {
             aug.at(col, j) /= div;
         }
 
-        // eliminate other rows
         for (int row = 0; row < n; ++row) {
             if (row == col) continue;
             double factor = aug.at(row, col);
@@ -211,7 +197,6 @@ bool invertMatrix(const Matrix& A, Matrix& invA) {
         }
     }
 
-    // Правая часть — это A^{-1}
     invA = Matrix(n, n, 0.0);
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
