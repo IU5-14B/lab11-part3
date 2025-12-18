@@ -1,10 +1,49 @@
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+
 #include "matrix.h"
 #include "linear_solvers.h"
+
+// Сохраняем псевдокод стадии обратной подстановки в файл
+static void saveBackSubstitutionPseudocode(const std::string& filePath) {
+    std::ofstream out(filePath);
+    if (!out.is_open()) {
+        std::cerr << "Не удалось открыть файл для записи: " << filePath << "\n";
+        return;
+    }
+
+    out << "Псевдокод: обратная подстановка (метод исключения Гаусса)\n";
+    out << "--------------------------------------------------------\n\n";
+    out << "Вход: верхнетреугольная матрица U (n x n), вектор y (n)\n";
+    out << "Выход: вектор решения x (n)\n\n";
+
+    out << "x[n-1] = y[n-1] / U[n-1][n-1]\n";
+    out << "для i = n-2 ... 0:\n";
+    out << "    sum = 0\n";
+    out << "    для j = i+1 ... n-1:\n";
+    out << "        sum = sum + U[i][j] * x[j]\n";
+    out << "    x[i] = (y[i] - sum) / U[i][i]\n\n";
+
+    out << "Доказательство сложности Θ(n^2):\n";
+    out << "Внешний цикл выполняется (n-1) раз.\n";
+    out << "Внутренний цикл выполняется: (n-1) + (n-2) + ... + 1 = n(n-1)/2.\n";
+    out << "Следовательно, число операций ~ n^2/2, то есть Θ(n^2).\n";
+
+    out.close();
+}
 
 int main() {
     std::cout << "Лабораторная работа 11, часть 3\n";
     std::cout << "Решение системы линейных уравнений тремя способами\n\n";
+
+    // Папка для результатов
+    std::filesystem::create_directories("results");
+
+    // Сохраняем псевдокод в файл (задание 5)
+    const std::string pseudoFile = "results/pseudocode_back_substitution.txt";
+    saveBackSubstitutionPseudocode(pseudoFile);
+    std::cout << "Псевдокод обратной подстановки сохранён в файл: " << pseudoFile << "\n\n";
 
     // Система из задания:
     // x1 + x2 + x3 = 2
